@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Server Events example</title>
+</head>
+<body>
+<button id="subscribe">Subscribe to all events</button>
+<button id="clearLog">Clear Log</button>
+
+<ul>
+</ul>
+<script language="JavaScript">
+    let evtSource;
+    const btnSubscribe = document.getElementById("subscribe");
+    const btnClearLog = document.getElementById("clearLog");
+    const eventList = document.querySelector('ul');
+
+    btnSubscribe.subscribed = false;
+
+    btnSubscribe.addEventListener("click", (ev) => {
+        console.log("Subscribe button pressed. Subscribed = %s", btnSubscribe.subscribed);
+        if ( !btnSubscribe.subscribed ) {
+            evtSource = openEventSource();
+            btnSubscribe.subscribed = true;
+            btnSubscribe.innerText = "Close event subscriber";
+        } else {
+            evtSource.close();
+            btnSubscribe.subscribed = false;
+            btnSubscribe.innerText = "Subscribe to all events";
+        }
+    });
+
+    btnClearLog.addEventListener("click", (ev) => {
+        eventList.innerHTML = "";
+    });
+
+    function openEventSource() {
+        const evtSource = new EventSource('/events');
+
+        console.log(evtSource.withCredentials);
+        console.log(evtSource.readyState);
+        console.log(evtSource.url);
+
+        evtSource.onopen = function() {
+            console.log("Connection to server opened.");
+        };
+        evtSource.onmessage = function(e) {
+            const newElement = document.createElement("li");
+            newElement.textContent = "message: " + e.data;
+            eventList.appendChild(newElement);
+        };
+        evtSource.addEventListener("test", (e) => {
+            const newElement = document.createElement("li");
+            newElement.textContent = "testEvent: " + e.data;
+            eventList.appendChild(newElement);
+        });
+        evtSource.onerror = function(e) {
+            console.log("EventSource failed.");
+            console.log(e);
+        };
+
+        return evtSource;
+    }
+</script>
+</body>
+</html>
